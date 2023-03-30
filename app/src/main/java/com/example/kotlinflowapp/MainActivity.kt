@@ -7,6 +7,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlin.math.log
 
 private const val TAG = "MainActivity"
 
@@ -25,7 +26,55 @@ class MainActivity : AppCompatActivity() {
         btn.setOnClickListener {
 //            test()
 //            test2()
-            test3()
+//            test3()
+//            test4()
+            test5()
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun test5() {
+        val th = newSingleThreadContext("myThread")
+        job = CoroutineScope(Dispatchers.Main).launch {
+            launch(th) {
+                repeat(10) {
+                    yield()
+                    Log.i(TAG, "$it")
+                    delay(1000)
+                }
+            }
+            launch(th) {
+                repeat(10) {
+                    Log.i(TAG, "test5: 休息一秒钟...")
+                    delay(1000)
+                    yield()
+                }
+            }
+        }
+    }
+
+    private fun test4() {
+        val th = newSingleThreadContext("hello-thread-01")
+        job = CoroutineScope(th).launch {
+            try {
+                launch(th) {
+                    repeat(5) {
+                        Log.i(TAG, "001: $it, ${Thread.currentThread().name}")
+                        delay(1000)
+                        yield()
+                    }
+                }
+                launch(th) {
+                    repeat(2) {
+                        Log.i(TAG, "002: $it, ${Thread.currentThread().name}")
+                        delay(3000)
+                        yield()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.i(TAG, "test4: 异常:${e.message}")
+            }
         }
     }
 
@@ -100,7 +149,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         if (!job.isCancelled) {
+            Log.i(TAG, "onDestroy: 开始取消job")
             job.cancel()
+            Log.i(TAG, "onDestroy: 已经执行cancel job")
         }
     }
 }
